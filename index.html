@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Holographic Card</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@ body{
   color:#fff;overflow:hidden
 }
 
-/* ---------- UI ---------- */
+/* UI */
 .ui{
   position:fixed;top:16px;left:16px;z-index:99;
   background:rgba(255,255,255,.1);
@@ -27,38 +27,31 @@ body{
   max-height:90vh;overflow:auto;width:240px
 }
 .ui label{font-size:12px;opacity:.8;margin-top:8px;display:block}
-.ui input,.ui textarea,.ui select,.ui button{
+.ui input,.ui textarea,.ui button{
   width:100%;margin-top:6px;padding:7px;
   border-radius:10px;border:none
 }
-.ui button{
-  cursor:pointer;
-  background:#00ffff;color:#000;font-weight:600
-}
-.ui textarea{resize:none;height:50px}
-
+.ui button{background:#00ffff;color:#000;font-weight:600;cursor:pointer}
 body.view .ui{display:none}
 
-/* ---------- SHARE BOX ---------- */
-#shareBox{
+/* Music Control */
+#musicToggle{
+  position:fixed;bottom:20px;right:20px;
+  background:rgba(0,0,0,.6);
+  border-radius:50%;
+  width:48px;height:48px;
   display:none;
-  margin-top:10px;
-  background:rgba(0,0,0,.35);
-  padding:8px;border-radius:12px
+  align-items:center;justify-content:center;
+  cursor:pointer;font-size:18px
 }
-#shareBox input{
-  width:100%;font-size:11px;margin-bottom:6px
-}
-#shareBox button{
-  background:#ffdd55
-}
+body.view #musicToggle{display:flex}
 
-/* ---------- CARD ---------- */
+/* Card */
 .scene{perspective:1400px}
 .card{
   width:320px;height:480px;position:relative;
   transform-style:preserve-3d;
-  transition:transform .8s
+  transition:transform .6s cubic-bezier(.2,.7,.2,1)
 }
 .card.flip{transform:rotateY(180deg)}
 
@@ -76,15 +69,6 @@ body.view .ui{display:none}
   display:flex;align-items:center;justify-content:center;
   font-size:22px;font-weight:800;text-align:center;padding:30px
 }
-
-/* Frames */
-.card.neon::before,.card.gold::before,.card.dark::before{
-  content:"";position:absolute;inset:-4px;
-  border-radius:26px;filter:blur(14px);z-index:-1
-}
-.card.neon::before{background:linear-gradient(120deg,#ff00cc,#00ffff,#ffee00)}
-.card.gold::before{background:linear-gradient(120deg,#ffd700,#ffb700)}
-.card.dark::before{background:linear-gradient(120deg,#444,#111)}
 
 /* Holo */
 .holo{
@@ -115,200 +99,122 @@ body.view .ui{display:none}
 }
 
 .stats{font-size:11px}
-.stat{margin:4px 0}
-.bar{height:6px;background:rgba(255,255,255,.2);border-radius:6px}
+.stat{margin:6px 0}
+.bar{height:6px;background:rgba(255,255,255,.2);border-radius:6px;overflow:hidden}
 .bar span{display:block;height:100%;background:linear-gradient(90deg,#ff00cc,#00ffff)}
-
-.rarity{position:absolute;top:12px;right:12px;font-size:11px}
-.edition{position:absolute;top:12px;left:12px;font-size:11px;opacity:.8}
 
 .hint{
   position:absolute;bottom:8px;left:50%;
   transform:translateX(-50%);
   font-size:11px;opacity:.6;
-  animation:hint 2s infinite
 }
-@keyframes hint{50%{opacity:1}}
 </style>
 </head>
 
 <body>
 
-<!-- ===== UI ===== -->
+<!-- UI -->
 <div class="ui">
-  <label>Celebration</label>
-  <input id="titleInput" value="HAPPY BIRTHDAY">
+<label>Celebration</label><input id="titleInput" value="HAPPY BIRTHDAY">
+<label>Subtitle</label><input id="subInput" value="A Legendary Day!">
+<label>Back Message</label><textarea id="backInput">Sachin Cares About You! 💖</textarea>
+<label>Hue</label><input type="range" id="hue" min="0" max="360">
 
-  <label>Subtitle</label>
-  <input id="subInput" value="A Legendary Day!">
+<label>Upload Image</label>
+<input type="file" id="imgUpload" accept="image/*">
 
-  <label>Back Message</label>
-  <textarea id="backInput">Sachin Cares About You! 💖</textarea>
+<label>Upload Music</label>
+<input type="file" id="musicUpload" accept="audio/*">
 
-  <label>Hue</label>
-  <input type="range" id="hue" min="0" max="360">
-
-  <label>Frame</label>
-  <select id="frame">
-    <option value="neon">Neon</option>
-    <option value="gold">Gold</option>
-    <option value="dark">Dark</option>
-  </select>
-
-  <label>Edition</label>
-  <input id="editionInput" value="001 / 001">
-
-  <label>Rarity</label>
-  <select id="rarity">
-    <option>COMMON</option>
-    <option>RARE</option>
-    <option>EPIC</option>
-    <option selected>LEGENDARY</option>
-  </select>
-
-  <label>Beauty</label><input type="range" id="sBeauty" min="0" max="100" value="90">
-  <label>Cuteness</label><input type="range" id="sCute" min="0" max="100" value="95">
-  <label>Shy</label><input type="range" id="sShy" min="0" max="100" value="70">
-  <label>Anger</label><input type="range" id="sAnger" min="0" max="100" value="20">
-  <label>Dangerous</label><input type="range" id="sDanger" min="0" max="100" value="40">
-
-  <label>Upload Image</label>
-  <input type="file" id="imgUpload" accept="image/*">
-
-  <button id="saveCardBtn">Save & Generate Link</button>
-
-  <!-- SHARE BOX -->
-  <div id="shareBox">
-    <input id="shareLink" readonly>
-    <button id="copyBtn">Copy Link</button>
-  </div>
+<button id="saveCardBtn">Save & Generate Link</button>
 </div>
 
-<!-- ===== CARD ===== -->
+<!-- Card -->
 <div class="scene">
-<div class="card neon" id="card">
+<div class="card" id="card">
   <div class="side front">
     <div class="holo"></div>
-    <div class="rarity" id="rarityText">LEGENDARY</div>
-    <div class="edition" id="edition">001 / 001</div>
     <div class="content">
       <div class="title" id="title">HAPPY BIRTHDAY</div>
       <div class="image-box"><img id="photo"></div>
-
-      <div class="stats">
-        <div class="stat">Beauty<div class="bar"><span id="bBeauty"></span></div></div>
-        <div class="stat">Cuteness<div class="bar"><span id="bCute"></span></div></div>
-        <div class="stat">Shy<div class="bar"><span id="bShy"></span></div></div>
-        <div class="stat">Anger<div class="bar"><span id="bAnger"></span></div></div>
-        <div class="stat">Dangerous<div class="bar"><span id="bDanger"></span></div></div>
-      </div>
-
       <div class="subtitle" id="subtitle">A Legendary Day!</div>
-      <div class="hint">↻ Tap to flip</div>
+      <div class="hint">Hold & drag • Tap to flip</div>
     </div>
   </div>
-
   <div class="side back" id="backText">Sachin Cares About You! 💖</div>
 </div>
 </div>
 
+<!-- Music -->
+<audio id="bgMusic" loop></audio>
+<div id="musicToggle">🔊</div>
+
 <script>
 const API="https://snowy-darkness-5596.rkknitfabsachin.workers.dev";
-let imageBase64="",flipped=false;
+let imageBase64="",musicBase64="";
+let holding=false,startX=0,startY=0;
+const bgMusic=document.getElementById("bgMusic");
+const toggle=document.getElementById("musicToggle");
 
-/* Flip */
-card.onclick=()=>{flipped=!flipped;card.classList.toggle("flip",flipped)};
-
-/* Parallax (edit only) */
+/* Hold to parallax */
+card.addEventListener("mousedown",e=>{
+ holding=true;startX=e.clientX;startY=e.clientY
+});
+document.addEventListener("mouseup",()=>{
+ holding=false;
+ card.style.transform="rotateX(0deg) rotateY(0deg)";
+});
 document.addEventListener("mousemove",e=>{
- if(flipped||document.body.classList.contains("view"))return;
- const x=(e.clientX/window.innerWidth-.5)*12;
- const y=(e.clientY/window.innerHeight-.5)*-12;
- card.style.transform=`rotateY(${x}deg) rotateX(${y}deg)`
+ if(!holding)return;
+ const dx=(e.clientX-startX)/15;
+ const dy=(e.clientY-startY)/-15;
+ card.style.transform=`rotateY(${dx}deg) rotateX(${dy}deg)`
 });
 
-/* Image → Base64 */
-imgUpload.onchange=e=>{
- const f=e.target.files[0];if(!f)return;
- const r=new FileReader();
- r.onload=()=>{imageBase64=r.result;photo.src=imageBase64};
- r.readAsDataURL(f);
-};
+/* Flip */
+card.onclick=()=>card.classList.toggle("flip");
 
 /* Controls */
 titleInput.oninput=()=>title.textContent=titleInput.value.toUpperCase();
 subInput.oninput=()=>subtitle.textContent=subInput.value;
 backInput.oninput=()=>backText.textContent=backInput.value;
 hue.oninput=e=>document.documentElement.style.setProperty("--hue",e.target.value);
-frame.onchange=e=>card.className="card "+e.target.value;
-editionInput.oninput=()=>edition.textContent=editionInput.value;
-rarity.onchange=e=>rarityText.textContent=e.target.value;
 
-const bind=(s,b)=>s.oninput=e=>b.style.width=e.target.value+"%";
-bind(sBeauty,bBeauty);bind(sCute,bCute);bind(sShy,bShy);bind(sAnger,bAnger);bind(sDanger,bDanger);
+/* Image */
+imgUpload.onchange=e=>{
+ const r=new FileReader();
+ r.onload=()=>photo.src=r.result;
+ r.readAsDataURL(e.target.files[0]);
+};
 
-/* SAVE + SHARE */
-saveCardBtn.onclick=async()=>{
- if(!imageBase64)return alert("Upload image first");
- const payload={
-  image:imageBase64,
-  title:title.textContent,
-  subtitle:subtitle.textContent,
-  backMessage:backText.textContent,
-  hue:getComputedStyle(document.documentElement).getPropertyValue("--hue"),
-  frame:card.classList.contains("gold")?"gold":card.classList.contains("dark")?"dark":"neon",
-  rarity:rarityText.textContent,
-  edition:edition.textContent,
-  stats:{
-    beauty:sBeauty.value,
-    cuteness:sCute.value,
-    shy:sShy.value,
-    anger:sAnger.value,
-    dangerous:sDanger.value
-  }
+/* Music */
+musicUpload.onchange=e=>{
+ const r=new FileReader();
+ r.onload=()=>{
+  musicBase64=r.result;
+  bgMusic.src=musicBase64;
  };
- const r=await fetch(API+"/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
- const d=await r.json();
- if(!d.id)return alert("Save failed");
-
- const link=location.origin+location.pathname+"?view=true&id="+d.id;
- const box=document.getElementById("shareBox");
- const input=document.getElementById("shareLink");
-
- input.value=link;
- box.style.display="block";
-
- input.select();
- document.execCommand("copy");
+ r.readAsDataURL(e.target.files[0]);
 };
 
-/* Copy button */
-copyBtn.onclick=()=>{
- shareLink.select();
- document.execCommand("copy");
+/* Music toggle */
+toggle.onclick=()=>{
+ if(bgMusic.paused){
+  bgMusic.play();
+  toggle.textContent="🔊";
+ }else{
+  bgMusic.pause();
+  toggle.textContent="🔇";
+ }
 };
 
-/* VIEW MODE */
-const p=new URLSearchParams(location.search);
-if(p.get("view")==="true"&&p.get("id")){
- document.body.classList.add("view");
- fetch(API+"/get?id="+p.get("id")).then(r=>r.json()).then(d=>{
-  photo.src=d.image;
-  title.textContent=d.title;
-  subtitle.textContent=d.subtitle;
-  backText.textContent=d.backMessage;
-  edition.textContent=d.edition;
-  rarityText.textContent=d.rarity;
-  card.className="card "+d.frame;
-  document.documentElement.style.setProperty("--hue",d.hue);
-  bBeauty.style.width=d.stats.beauty+"%";
-  bCute.style.width=d.stats.cuteness+"%";
-  bShy.style.width=d.stats.shy+"%";
-  bAnger.style.width=d.stats.anger+"%";
-  bDanger.style.width=d.stats.dangerous+"%";
-  setTimeout(()=>{card.classList.add("flip");setTimeout(()=>card.classList.remove("flip"),2200)},1200);
- });
-}
+/* Autoplay on interaction */
+document.addEventListener("click",()=>{
+ if(bgMusic.src && bgMusic.paused){
+  bgMusic.volume=0.5;
+  bgMusic.play().catch(()=>{});
+ }
+},{once:true});
 </script>
 
 </body>
