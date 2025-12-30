@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Holographic Card</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -13,18 +13,18 @@
 
 body{
   margin:0;min-height:100vh;
-  display:flex;justify-content:center;align-items:center;
+  display:flex;align-items:center;justify-content:center;
   background:radial-gradient(circle at top,#1a1a2e,#000);
   color:#fff;overflow:hidden
 }
 
 /* UI */
 .ui{
-  position:fixed;top:16px;left:16px;z-index:99;
+  position:fixed;top:16px;left:16px;z-index:10;
+  width:260px;max-height:90vh;overflow:auto;
   background:rgba(255,255,255,.1);
   backdrop-filter:blur(14px);
-  border-radius:18px;padding:14px;
-  max-height:90vh;overflow:auto;width:260px
+  border-radius:18px;padding:14px
 }
 .ui label{font-size:12px;opacity:.8;margin-top:8px;display:block}
 .ui input,.ui textarea,.ui select,.ui button{
@@ -35,21 +35,26 @@ body{
 .ui textarea{resize:none;height:50px}
 body.view .ui{display:none}
 
+/* Share box */
+#shareBox{display:none;margin-top:10px}
+#shareLink{font-size:11px}
+#copyBtn{margin-top:6px;background:#ffd966}
+
 /* Music toggle */
 #musicToggle{
   position:fixed;bottom:20px;right:20px;
   width:48px;height:48px;border-radius:50%;
   background:rgba(0,0,0,.6);
   display:none;align-items:center;justify-content:center;
-  cursor:pointer;font-size:20px
+  font-size:20px;cursor:pointer
 }
 body.view #musicToggle{display:flex}
 
-/* CARD */
+/* Card */
 .scene{perspective:1400px}
 .card{
-  width:320px;height:480px;position:relative;
-  transform-style:preserve-3d;
+  width:320px;height:480px;
+  position:relative;transform-style:preserve-3d;
   transition:transform .6s cubic-bezier(.2,.7,.2,1)
 }
 .card.flip{transform:rotateY(180deg)}
@@ -71,8 +76,8 @@ body.view #musicToggle{display:flex}
 
 /* Frames */
 .card.neon::before,.card.gold::before,.card.dark::before{
-  content:"";position:absolute;inset:-4px;border-radius:26px;
-  filter:blur(14px);z-index:-1
+  content:"";position:absolute;inset:-4px;
+  border-radius:26px;filter:blur(14px);z-index:-1
 }
 .card.neon::before{background:linear-gradient(120deg,#ff00cc,#00ffff,#ffee00)}
 .card.gold::before{background:linear-gradient(120deg,#ffd700,#ffb700)}
@@ -91,7 +96,7 @@ body.view #musicToggle{display:flex}
 }
 @keyframes holo{to{filter:hue-rotate(360deg)}}
 
-.content{position:relative;z-index:3;padding:16px;height:100%;display:flex;flex-direction:column}
+.content{position:relative;z-index:2;padding:16px;height:100%;display:flex;flex-direction:column}
 .title{text-align:center;font-weight:800;font-size:20px}
 .subtitle{text-align:center;font-size:13px;opacity:.9}
 
@@ -111,7 +116,7 @@ body.view #musicToggle{display:flex}
 
 .stats{font-size:11px}
 .stat{margin:6px 0}
-.bar{height:6px;background:rgba(255,255,255,.2);border-radius:6px;overflow:hidden}
+.bar{height:6px;background:rgba(255,255,255,.2);border-radius:6px}
 .bar span{
   display:block;height:100%;width:0%;
   background:linear-gradient(90deg,#ff00cc,#00ffff);
@@ -165,21 +170,24 @@ body.view #musicToggle{display:flex}
 <label>Upload Music</label>
 <input type="file" id="musicUpload" accept="audio/*">
 
-<button id="saveCardBtn">Save & Generate Link</button>
+<button id="saveBtn">Save & Generate Link</button>
+
+<div id="shareBox">
+  <input id="shareLink" readonly>
+  <button id="copyBtn">Copy Link</button>
+</div>
 </div>
 
-<!-- CARD -->
+<!-- Card -->
 <div class="scene">
 <div class="card neon" id="card">
   <div class="side front">
     <div class="holo"></div>
     <div class="rarity" id="rarityText">LEGENDARY</div>
     <div class="edition" id="edition">001 / 999</div>
-
     <div class="content">
       <div class="title" id="title">HAPPY BIRTHDAY</div>
       <div class="image-box"><img id="photo"></div>
-
       <div class="stats">
         <div class="stat">Beauty<div class="bar"><span id="bBeauty"></span></div></div>
         <div class="stat">Cuteness<div class="bar"><span id="bCute"></span></div></div>
@@ -187,12 +195,10 @@ body.view #musicToggle{display:flex}
         <div class="stat">Anger<div class="bar"><span id="bAnger"></span></div></div>
         <div class="stat">Dangerous<div class="bar"><span id="bDanger"></span></div></div>
       </div>
-
       <div class="subtitle" id="subtitle">A Legendary Day!</div>
       <div class="hint">Hold & drag • Tap to flip</div>
     </div>
   </div>
-
   <div class="side back" id="backText">Sachin Cares About You! 💖</div>
 </div>
 </div>
@@ -202,63 +208,47 @@ body.view #musicToggle{display:flex}
 
 <script>
 const API="https://snowy-darkness-5596.rkknitfabsachin.workers.dev";
-let imageBase64="",musicBase64="";
+let imageBase64="",musicBase64="",musicStarted=false;
 let holding=false,moved=false,startX=0,startY=0;
-let musicStarted=false;
 
-/* HOLD + DRAG + TAP (ALL DEVICES) */
-function startHold(x,y){
- holding=true;moved=false;startX=x;startY=y;
-}
+/* Interaction */
+function startHold(x,y){holding=true;moved=false;startX=x;startY=y;}
 function moveHold(x,y){
  if(!holding)return;
  moved=true;
- const dx=(x-startX)/12;
- const dy=(y-startY)/-12;
- card.style.transform=`rotateY(${dx}deg) rotateX(${dy}deg)`;
+ card.style.transform=`rotateY(${(x-startX)/12}deg) rotateX(${(y-startY)/-12}deg)`;
 }
 function endHold(){
- if(!holding)return;
  holding=false;
- card.style.transition="transform .35s ease";
+ card.style.transition="transform .3s ease";
  card.style.transform="rotateX(0deg) rotateY(0deg)";
- setTimeout(()=>card.style.transition="",350);
+ setTimeout(()=>card.style.transition="",300);
 }
 
-/* Desktop */
-card.addEventListener("mousedown",e=>startHold(e.clientX,e.clientY));
-document.addEventListener("mousemove",e=>moveHold(e.clientX,e.clientY));
-document.addEventListener("mouseup",endHold);
+/* Mouse */
+card.onmousedown=e=>startHold(e.clientX,e.clientY);
+document.onmousemove=e=>moveHold(e.clientX,e.clientY);
+document.onmouseup=endHold;
 
-/* Mobile */
-card.addEventListener("touchstart",e=>{
- const t=e.touches[0];startHold(t.clientX,t.clientY);
-},{passive:true});
-card.addEventListener("touchmove",e=>{
- const t=e.touches[0];moveHold(t.clientX,t.clientY);
-},{passive:true});
-card.addEventListener("touchend",()=>{
+/* Touch */
+card.ontouchstart=e=>startHold(e.touches[0].clientX,e.touches[0].clientY);
+card.ontouchmove=e=>moveHold(e.touches[0].clientX,e.touches[0].clientY);
+card.ontouchend=()=>{
  endHold();
- if(!moved){
-  card.classList.toggle("flip");
-  if(!musicStarted && bgMusic.src){
-   bgMusic.volume=.5;
-   bgMusic.play().catch(()=>{});
-   musicStarted=true;
-  }
- }
-});
+ if(!moved) flipAndMusic();
+};
 
-/* Desktop tap */
-card.addEventListener("click",()=>{
- if(moved)return;
+/* Click */
+card.onclick=()=>{if(!moved) flipAndMusic();};
+
+function flipAndMusic(){
  card.classList.toggle("flip");
  if(!musicStarted && bgMusic.src){
-  bgMusic.volume=.5;
+  bgMusic.volume=0.5;
   bgMusic.play().catch(()=>{});
   musicStarted=true;
  }
-});
+}
 
 /* Controls */
 titleInput.oninput=()=>title.textContent=titleInput.value.toUpperCase();
@@ -287,15 +277,38 @@ musicToggle.onclick=()=>{
  else{bgMusic.pause();musicToggle.textContent="🔇"}
 };
 
-/* Stats animation */
+/* Stats */
 function animateStats(){
  const v=[sBeauty.value,sCute.value,sShy.value,sAnger.value,sDanger.value];
- const b=[bBeauty,bCute,bShy,bAnger,bDanger];
- b.forEach(x=>x.style.width="0%");
- b.forEach((x,i)=>setTimeout(()=>x.style.width=v[i]+"%",i*250));
+ [bBeauty,bCute,bShy,bAnger,bDanger].forEach((b,i)=>{
+  b.style.width="0%";
+  setTimeout(()=>b.style.width=v[i]+"%",i*250);
+ });
 }
 [sBeauty,sCute,sShy,sAnger,sDanger].forEach(i=>i.oninput=animateStats);
 animateStats();
+
+/* Save */
+saveBtn.onclick=async()=>{
+ if(!imageBase64){alert("Upload image first");return;}
+ const payload={
+  image:imageBase64,music:musicBase64,
+  title:title.textContent,subtitle:subtitle.textContent,
+  backMessage:backText.textContent,
+  hue:getComputedStyle(document.documentElement).getPropertyValue("--hue"),
+  frame:card.classList.contains("gold")?"gold":card.classList.contains("dark")?"dark":"neon",
+  rarity:rarityText.textContent,edition:edition.textContent,
+  stats:{beauty:sBeauty.value,cuteness:sCute.value,shy:sShy.value,anger:sAnger.value,dangerous:sDanger.value}
+ };
+ const r=await fetch(API+"/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+ const d=await r.json();
+ if(!d.id){alert("Save failed");return;}
+ shareLink.value=location.origin+location.pathname+"?view=true&id="+d.id;
+ shareBox.style.display="block";
+};
+
+/* Copy */
+copyBtn.onclick=()=>{shareLink.select();document.execCommand("copy");};
 </script>
 
 </body>
