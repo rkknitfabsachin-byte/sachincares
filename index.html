@@ -215,27 +215,51 @@ body.view #musicToggle{display:flex}
 <script>
 const API="https://snowy-darkness-5596.rkknitfabsachin.workers.dev";
 let imageBase64="",musicBase64="";
-let holding=false,startX=0,startY=0;
 
-/* Hold to parallax */
-card.addEventListener("mousedown",e=>{
- holding=true;startX=e.clientX;startY=e.clientY
-});
-document.addEventListener("mouseup",()=>{
- holding=false;
- card.style.transform="rotateX(0deg) rotateY(0deg)";
-});
-document.addEventListener("mousemove",e=>{
+/* ===============================
+   HOLD + DRAG + TAP (ALL DEVICES)
+================================ */
+let holding=false,moved=false,startX=0,startY=0;
+
+function startHold(x,y){
+ holding=true;moved=false;startX=x;startY=y;
+}
+function moveHold(x,y){
  if(!holding)return;
- const dx=(e.clientX-startX)/15;
- const dy=(e.clientY-startY)/-15;
- card.style.transform=`rotateY(${dx}deg) rotateX(${dy}deg)`
+ moved=true;
+ const dx=(x-startX)/12;
+ const dy=(y-startY)/-12;
+ card.style.transform=`rotateY(${dx}deg) rotateX(${dy}deg)`;
+}
+function endHold(){
+ if(!holding)return;
+ holding=false;
+ card.style.transition="transform .35s ease";
+ card.style.transform="rotateX(0deg) rotateY(0deg)";
+ setTimeout(()=>card.style.transition="",350);
+}
+
+/* Desktop */
+card.addEventListener("mousedown",e=>startHold(e.clientX,e.clientY));
+document.addEventListener("mousemove",e=>moveHold(e.clientX,e.clientY));
+document.addEventListener("mouseup",endHold);
+
+/* Mobile */
+card.addEventListener("touchstart",e=>{
+ const t=e.touches[0];startHold(t.clientX,t.clientY);
+},{passive:true});
+card.addEventListener("touchmove",e=>{
+ const t=e.touches[0];moveHold(t.clientX,t.clientY);
+},{passive:true});
+card.addEventListener("touchend",endHold);
+
+/* Tap to flip */
+card.addEventListener("click",()=>{
+ if(moved)return;
+ card.classList.toggle("flip");
 });
 
-/* Flip */
-card.onclick=()=>card.classList.toggle("flip");
-
-/* Controls */
+/* ================= CONTROLS ================= */
 titleInput.oninput=()=>title.textContent=titleInput.value.toUpperCase();
 subInput.oninput=()=>subtitle.textContent=subInput.value;
 backInput.oninput=()=>backText.textContent=backInput.value;
@@ -254,14 +278,9 @@ imgUpload.onchange=e=>{
 /* Music */
 musicUpload.onchange=e=>{
  const r=new FileReader();
- r.onload=()=>{
-  musicBase64=r.result;
-  bgMusic.src=musicBase64;
- };
+ r.onload=()=>{musicBase64=r.result;bgMusic.src=musicBase64};
  r.readAsDataURL(e.target.files[0]);
 };
-
-/* Music toggle */
 musicToggle.onclick=()=>{
  if(bgMusic.paused){bgMusic.play();musicToggle.textContent="🔊"}
  else{bgMusic.pause();musicToggle.textContent="🔇"}
@@ -269,10 +288,10 @@ musicToggle.onclick=()=>{
 
 /* Stats animation */
 function animateStats(){
- const vals=[sBeauty.value,sCute.value,sShy.value,sAnger.value,sDanger.value];
- const bars=[bBeauty,bCute,bShy,bAnger,bDanger];
- bars.forEach(b=>b.style.width="0%");
- bars.forEach((b,i)=>setTimeout(()=>b.style.width=vals[i]+"%",i*250));
+ const v=[sBeauty.value,sCute.value,sShy.value,sAnger.value,sDanger.value];
+ const b=[bBeauty,bCute,bShy,bAnger,bDanger];
+ b.forEach(x=>x.style.width="0%");
+ b.forEach((x,i)=>setTimeout(()=>x.style.width=v[i]+"%",i*250));
 }
 [sBeauty,sCute,sShy,sAnger,sDanger].forEach(i=>i.oninput=animateStats);
 animateStats();
@@ -291,11 +310,11 @@ saveCardBtn.onclick=async()=>{
   rarity:rarityText.textContent,
   edition:edition.textContent,
   stats:{
-    beauty:sBeauty.value,
-    cuteness:sCute.value,
-    shy:sShy.value,
-    anger:sAnger.value,
-    dangerous:sDanger.value
+   beauty:sBeauty.value,
+   cuteness:sCute.value,
+   shy:sShy.value,
+   anger:sAnger.value,
+   dangerous:sDanger.value
   }
  };
  const r=await fetch(API+"/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
@@ -306,7 +325,7 @@ saveCardBtn.onclick=async()=>{
  shareLink.select();document.execCommand("copy");
 };
 
-/* View mode load */
+/* View */
 const p=new URLSearchParams(location.search);
 if(p.get("view")==="true"&&p.get("id")){
  document.body.classList.add("view");
