@@ -32,15 +32,10 @@ body{
   border-radius:10px;border:none
 }
 .ui textarea{resize:none;height:50px}
-.ui button{
-  background:#00ffff;color:#000;
-  font-weight:600;cursor:pointer
-}
+.ui button{background:#00ffff;color:#000;font-weight:600;cursor:pointer}
 #shareBox{display:none;margin-top:10px}
 #shareLink{font-size:11px}
 #copyBtn{margin-top:6px;background:#ffd966}
-
-/* Viewer mode hides editor */
 body.view .ui{display:none}
 
 /* ================= MUSIC TOGGLE ================= */
@@ -55,7 +50,6 @@ body.view #musicToggle{display:flex}
 
 /* ================= CARD ================= */
 .scene{perspective:1400px}
-
 .card{
   width:320px;height:480px;
   position:relative;
@@ -70,7 +64,6 @@ body.view #musicToggle{display:flex}
   overflow:hidden;
   backface-visibility:hidden
 }
-
 .front,.back{
   background:linear-gradient(160deg,rgba(255,255,255,.25),rgba(255,255,255,.05));
   border:2px solid rgba(255,255,255,.35);
@@ -79,8 +72,7 @@ body.view #musicToggle{display:flex}
 .back{
   transform:rotateY(180deg);
   display:flex;align-items:center;justify-content:center;
-  font-size:22px;font-weight:800;
-  text-align:center;padding:30px
+  font-size:22px;font-weight:800;text-align:center;padding:30px
 }
 
 /* Frames */
@@ -92,7 +84,7 @@ body.view #musicToggle{display:flex}
 .card.gold::before{background:linear-gradient(120deg,#ffd700,#ffb700)}
 .card.dark::before{background:linear-gradient(120deg,#444,#111)}
 
-/* Holo overlay */
+/* ================= HOLO ================= */
 .holo{
   position:absolute;inset:0;
   background:linear-gradient(120deg,
@@ -101,16 +93,46 @@ body.view #musicToggle{display:flex}
     hsla(calc(var(--hue)+240),100%,60%,.35)
   );
   mix-blend-mode:overlay;
-  animation:holo 6s linear infinite
+  animation:holoHue 6s linear infinite;
+  pointer-events:none
 }
-@keyframes holo{to{filter:hue-rotate(360deg)}}
+@keyframes holoHue{to{filter:hue-rotate(360deg)}}
 
+/* Pokemon-style sweep + sparkle */
+.holo::after{
+  content:"";
+  position:absolute;inset:-60%;
+  background:linear-gradient(115deg,
+    transparent 35%,
+    rgba(255,255,255,.35) 50%,
+    transparent 65%);
+  animation:holoSweep 4.5s linear infinite;
+  mix-blend-mode:overlay
+}
+.holo::before{
+  content:"";
+  position:absolute;inset:0;
+  background-image:radial-gradient(rgba(255,255,255,.15) 1px, transparent 1px);
+  background-size:3px 3px;
+  opacity:.35;
+  animation:sparkle 6s linear infinite;
+  mix-blend-mode:overlay
+}
+@keyframes holoSweep{
+  from{transform:translateX(-40%) rotate(0deg)}
+  to{transform:translateX(40%) rotate(360deg)}
+}
+@keyframes sparkle{
+  from{background-position:0 0}
+  to{background-position:120px 120px}
+}
+
+/* ================= CONTENT ================= */
 .content{
   position:relative;z-index:2;
   padding:16px;height:100%;
   display:flex;flex-direction:column
 }
-
 .title{text-align:center;font-weight:800;font-size:20px}
 .subtitle{text-align:center;font-size:13px;opacity:.9}
 
@@ -119,9 +141,7 @@ body.view #musicToggle{display:flex}
   border-radius:14px;overflow:hidden;
   background:rgba(0,0,0,.25)
 }
-.image-box img{
-  width:100%;height:100%;object-fit:cover
-}
+.image-box img{width:100%;height:100%;object-fit:cover}
 
 .rarity{position:absolute;top:12px;right:12px;font-size:11px}
 .edition{position:absolute;top:12px;left:12px;font-size:11px;opacity:.8}
@@ -129,10 +149,7 @@ body.view #musicToggle{display:flex}
 /* Stats */
 .stats{font-size:11px}
 .stat{margin:6px 0}
-.bar{
-  height:6px;border-radius:6px;
-  background:rgba(255,255,255,.2)
-}
+.bar{height:6px;border-radius:6px;background:rgba(255,255,255,.2)}
 .bar span{
   display:block;height:100%;width:0%;
   background:linear-gradient(90deg,#ff00cc,#00ffff);
@@ -208,11 +225,9 @@ body.view #musicToggle{display:flex}
     <div class="holo"></div>
     <div class="rarity" id="rarityText">LEGENDARY</div>
     <div class="edition" id="edition">001 / 999</div>
-
     <div class="content">
       <div class="title" id="title">HAPPY BIRTHDAY</div>
       <div class="image-box"><img id="photo"></div>
-
       <div class="stats">
         <div class="stat">Beauty<div class="bar"><span id="bBeauty"></span></div></div>
         <div class="stat">Cuteness<div class="bar"><span id="bCute"></span></div></div>
@@ -220,247 +235,156 @@ body.view #musicToggle{display:flex}
         <div class="stat">Anger<div class="bar"><span id="bAnger"></span></div></div>
         <div class="stat">Dangerous<div class="bar"><span id="bDanger"></span></div></div>
       </div>
-
       <div class="subtitle" id="subtitle">A Legendary Day!</div>
-      <div class="hint">Hold & drag • Tap to flip</div>
+      <div class="hint">Drag left / right to flip</div>
     </div>
   </div>
-
-  <div class="side back" id="backText">
-    Sachin Cares About You! 💖
-  </div>
+  <div class="side back" id="backText">Sachin Cares About You! 💖</div>
 </div>
 </div>
 
 <audio id="bgMusic" loop></audio>
 <div id="musicToggle">🔊</div>
+
 <script>
-/* ================= CONFIG ================= */
-const API = "https://snowy-darkness-5596.rkknitfabsachin.workers.dev";
+const API="https://snowy-darkness-5596.rkknitfabsachin.workers.dev";
+const params=new URLSearchParams(location.search);
+const isView=params.get("view")==="true";
+const cardId=params.get("id");
 
-/* ================= MODE DETECTION ================= */
-const params = new URLSearchParams(location.search);
-const isView = params.get("view") === "true";
-const cardId = params.get("id");
+if(isView) document.body.classList.add("view");
 
-/* ================= ELEMENTS ================= */
-const card = document.getElementById("card");
-const bgMusic = document.getElementById("bgMusic");
-const musicToggle = document.getElementById("musicToggle");
+const card=document.getElementById("card");
+const bgMusic=document.getElementById("bgMusic");
+const musicToggle=document.getElementById("musicToggle");
 
-const title = document.getElementById("title");
-const subtitle = document.getElementById("subtitle");
-const backText = document.getElementById("backText");
-const rarityText = document.getElementById("rarityText");
-const edition = document.getElementById("edition");
-const photo = document.getElementById("photo");
+let holding=false, startX=0, startY=0, flipped=false, musicStarted=false;
 
-const shareBox = document.getElementById("shareBox");
-const shareLink = document.getElementById("shareLink");
-
-/* ================= VIEW MODE SETUP ================= */
-if (isView) {
-  document.body.classList.add("view");
+/* DRAG → PARALLAX → FLIP */
+function startHold(x,y){
+  holding=true; startX=x; startY=y;
 }
+function moveHold(x,y){
+  if(!holding) return;
 
-/* ================= INTERACTION STATE ================= */
-let holding = false;
-let moved = false;
-let startX = 0;
-let startY = 0;
-let musicStarted = false;
+  const dx=x-startX;
+  const dy=y-startY;
 
-/* ================= HOLD / DRAG ================= */
-function startHold(x, y) {
-  holding = true;
-  moved = false;
-  startX = x;
-  startY = y;
+  const ry=Math.max(Math.min(dx/5,28),-28);
+  const rx=Math.max(Math.min(dy/-5,28),-28);
+
+  card.style.transform=
+    `rotateY(${ry}deg) rotateX(${rx}deg) ${flipped?"rotateY(180deg)":""}`;
+
+  if(Math.abs(dx)>90){
+    flipped = dx>0;
+    card.classList.toggle("flip",flipped);
+    startMusic();
+  }
 }
-
-function moveHold(x, y) {
-  if (!holding) return;
-  if (Math.abs(x - startX) > 8 || Math.abs(y - startY) > 8) moved = true;
-
-  const dx = (x - startX) / 12;
-  const dy = (y - startY) / -12;
-  card.style.transform = `rotateY(${dx}deg) rotateX(${dy}deg)`;
+function endHold(){
+  holding=false;
+  card.style.transition="transform .4s ease";
+  card.style.transform=flipped?"rotateY(180deg)":"rotateX(0) rotateY(0)";
+  setTimeout(()=>card.style.transition="",400);
 }
-
-function endHold() {
-  if (!holding) return;
-  holding = false;
-  card.style.transition = "transform .35s ease";
-  card.style.transform = "rotateX(0deg) rotateY(0deg)";
-  setTimeout(() => (card.style.transition = ""), 350);
-}
-
-/* ================= MOBILE EVENTS ================= */
-card.addEventListener("touchstart", e => {
-  const t = e.touches[0];
-  startHold(t.clientX, t.clientY);
-}, { passive: true });
-
-card.addEventListener("touchmove", e => {
-  const t = e.touches[0];
-  moveHold(t.clientX, t.clientY);
-}, { passive: true });
-
-card.addEventListener("touchend", () => {
-  endHold();
-  if (!moved) flipAndMusic();
-});
-
-/* ================= DESKTOP EVENTS ================= */
-card.addEventListener("mousedown", e => {
-  startHold(e.clientX, e.clientY);
-});
-document.addEventListener("mousemove", e => {
-  moveHold(e.clientX, e.clientY);
-});
-document.addEventListener("mouseup", endHold);
-
-card.addEventListener("click", () => {
-  if ("ontouchstart" in window) return;
-  if (!moved) flipAndMusic();
-});
-
-/* ================= FLIP + MUSIC ================= */
-function flipAndMusic() {
-  card.classList.toggle("flip");
-
-  if (!musicStarted && bgMusic.src) {
-    bgMusic.volume = 0.5;
-    bgMusic.play().catch(() => {});
-    musicStarted = true;
+function startMusic(){
+  if(!musicStarted && bgMusic.src){
+    bgMusic.volume=.5;
+    bgMusic.play().catch(()=>{});
+    musicStarted=true;
   }
 }
 
-/* ================= MUSIC TOGGLE ================= */
-musicToggle.onclick = () => {
-  if (bgMusic.paused) {
-    bgMusic.play().catch(() => {});
-    musicToggle.textContent = "🔊";
-    musicStarted = true;
-  } else {
-    bgMusic.pause();
-    musicToggle.textContent = "🔇";
-  }
+/* Mobile */
+card.addEventListener("touchstart",e=>{
+  const t=e.touches[0]; startHold(t.clientX,t.clientY);
+},{passive:true});
+card.addEventListener("touchmove",e=>{
+  const t=e.touches[0]; moveHold(t.clientX,t.clientY);
+},{passive:true});
+card.addEventListener("touchend",endHold);
+
+/* Desktop */
+card.addEventListener("mousedown",e=>startHold(e.clientX,e.clientY));
+document.addEventListener("mousemove",e=>moveHold(e.clientX,e.clientY));
+document.addEventListener("mouseup",endHold);
+
+/* Music toggle */
+musicToggle.onclick=()=>{
+  if(bgMusic.paused){bgMusic.play();musicToggle.textContent="🔊";}
+  else{bgMusic.pause();musicToggle.textContent="🔇";}
 };
 
-/* ================= EDITOR CONTROLS ================= */
-if (!isView) {
-  titleInput.oninput = () => title.textContent = titleInput.value.toUpperCase();
-  subInput.oninput = () => subtitle.textContent = subInput.value;
-  backInput.oninput = () => backText.textContent = backInput.value;
+/* Editor only logic */
+if(!isView){
+  titleInput.oninput=()=>title.textContent=titleInput.value.toUpperCase();
+  subInput.oninput=()=>subtitle.textContent=subInput.value;
+  backInput.oninput=()=>backText.textContent=backInput.value;
+  hue.oninput=e=>document.documentElement.style.setProperty("--hue",e.target.value);
+  frame.onchange=e=>card.className="card "+e.target.value;
+  rarity.onchange=e=>rarityText.textContent=e.target.value;
+  editionInput.oninput=()=>edition.textContent=editionInput.value;
 
-  hue.oninput = e =>
-    document.documentElement.style.setProperty("--hue", e.target.value);
-
-  frame.onchange = e => card.className = "card " + e.target.value;
-  rarity.onchange = e => rarityText.textContent = e.target.value;
-  editionInput.oninput = () => edition.textContent = editionInput.value;
-
-  /* Image upload */
-  imgUpload.onchange = e => {
-    const r = new FileReader();
-    r.onload = () => photo.src = r.result;
+  imgUpload.onchange=e=>{
+    const r=new FileReader();
+    r.onload=()=>photo.src=r.result;
+    r.readAsDataURL(e.target.files[0]);
+  };
+  musicUpload.onchange=e=>{
+    const r=new FileReader();
+    r.onload=()=>bgMusic.src=r.result;
     r.readAsDataURL(e.target.files[0]);
   };
 
-  /* Music upload */
-  musicUpload.onchange = e => {
-    const r = new FileReader();
-    r.onload = () => bgMusic.src = r.result;
-    r.readAsDataURL(e.target.files[0]);
-  };
-
-  /* Stats */
-  function animateStats() {
-    const v = [
-      sBeauty.value,
-      sCute.value,
-      sShy.value,
-      sAnger.value,
-      sDanger.value
-    ];
-    const bars = [bBeauty, bCute, bShy, bAnger, bDanger];
-    bars.forEach(b => b.style.width = "0%");
-    bars.forEach((b, i) =>
-      setTimeout(() => b.style.width = v[i] + "%", i * 200)
-    );
+  function animateStats(){
+    [bBeauty,bCute,bShy,bAnger,bDanger].forEach((b,i)=>{
+      const v=[sBeauty,sCute,sShy,sAnger,sDanger][i].value;
+      b.style.width=v+"%";
+    });
   }
-  [sBeauty, sCute, sShy, sAnger, sDanger].forEach(s => s.oninput = animateStats);
+  [sBeauty,sCute,sShy,sAnger,sDanger].forEach(s=>s.oninput=animateStats);
   animateStats();
 
-  /* SAVE */
-  saveBtn.onclick = async () => {
-    if (!photo.src) return alert("Upload image first");
-
-    const payload = {
-      title: title.textContent,
-      subtitle: subtitle.textContent,
-      backMessage: backText.textContent,
-      image: photo.src,
-      music: bgMusic.src || "",
-      hue: getComputedStyle(document.documentElement).getPropertyValue("--hue"),
-      frame: card.classList.contains("gold") ? "gold" :
-             card.classList.contains("dark") ? "dark" : "neon",
-      rarity: rarityText.textContent,
-      edition: edition.textContent,
-      stats: {
-        beauty: sBeauty.value,
-        cuteness: sCute.value,
-        shy: sShy.value,
-        anger: sAnger.value,
-        dangerous: sDanger.value
-      }
+  saveBtn.onclick=async()=>{
+    if(!photo.src) return alert("Upload image first");
+    const payload={
+      title:title.textContent,subtitle:subtitle.textContent,
+      backMessage:backText.textContent,image:photo.src,
+      music:bgMusic.src||"",hue:getComputedStyle(document.documentElement).getPropertyValue("--hue"),
+      frame:card.classList.contains("gold")?"gold":card.classList.contains("dark")?"dark":"neon",
+      rarity:rarityText.textContent,edition:edition.textContent,
+      stats:{beauty:sBeauty.value,cuteness:sCute.value,shy:sShy.value,anger:sAnger.value,dangerous:sDanger.value}
     };
-
-    const res = await fetch(API + "/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-    if (!data.id) return alert("Save failed");
-
-    const link =
-      location.origin + location.pathname + "?view=true&id=" + data.id;
-
-    shareLink.value = link;
-    shareBox.style.display = "block";
+    const r=await fetch(API+"/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const d=await r.json();
+    if(!d.id) return alert("Save failed");
+    shareLink.value=location.origin+location.pathname+"?view=true&id="+d.id;
+    shareBox.style.display="block";
   };
-
-  copyBtn.onclick = () => {
-    shareLink.select();
-    document.execCommand("copy");
-  };
+  copyBtn.onclick=()=>{shareLink.select();document.execCommand("copy");};
 }
 
-/* ================= VIEW MODE LOAD ================= */
-if (isView && cardId) {
-  fetch(API + "/get?id=" + cardId)
-    .then(r => r.json())
-    .then(d => {
-      title.textContent = d.title;
-      subtitle.textContent = d.subtitle;
-      backText.textContent = d.backMessage;
-      rarityText.textContent = d.rarity;
-      edition.textContent = d.edition;
-      photo.src = d.image;
-      if (d.music) bgMusic.src = d.music;
-      card.className = "card " + d.frame;
-      document.documentElement.style.setProperty("--hue", d.hue);
-
-      bBeauty.style.width = d.stats.beauty + "%";
-      bCute.style.width = d.stats.cuteness + "%";
-      bShy.style.width = d.stats.shy + "%";
-      bAnger.style.width = d.stats.anger + "%";
-      bDanger.style.width = d.stats.dangerous + "%";
-    });
+/* Viewer load */
+if(isView && cardId){
+  fetch(API+"/get?id="+cardId).then(r=>r.json()).then(d=>{
+    title.textContent=d.title;
+    subtitle.textContent=d.subtitle;
+    backText.textContent=d.backMessage;
+    rarityText.textContent=d.rarity;
+    edition.textContent=d.edition;
+    photo.src=d.image;
+    if(d.music) bgMusic.src=d.music;
+    card.className="card "+d.frame;
+    document.documentElement.style.setProperty("--hue",d.hue);
+    bBeauty.style.width=d.stats.beauty+"%";
+    bCute.style.width=d.stats.cuteness+"%";
+    bShy.style.width=d.stats.shy+"%";
+    bAnger.style.width=d.stats.anger+"%";
+    bDanger.style.width=d.stats.dangerous+"%";
+  });
 }
 </script>
+
 </body>
 </html>
