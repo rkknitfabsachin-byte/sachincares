@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Holographic Card</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<style>
+:root{--hue:0}
+*{box-sizing:border-box;font-family:Inter}
+
+body{
+  margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;
+  background:radial-gradient(circle at top,#1a1a2e,#000);color:#fff;overflow:hidden
+}
+
+.ui{
+  position:fixed;top:16px;left:16px;z-index:99;
+  background:rgba(255,255,255,.1);backdrop-filter:blur(14px);
+  border-radius:18px;padding:14px;max-height:90vh;overflow:auto
+}
+.ui input,.ui textarea,.ui select,.ui button{
+  width:220px;margin-top:6px;padding:7px;border-radius:10px;border:none
+}
+.ui label{font-size:12px;opacity:.8;margin-top:8px;display:block}
+
+body.view .ui{display:none}
+
+.scene{perspective:1400px}
+.card{
+  width:320px;height:480px;position:relative;
+  transform-style:preserve-3d;transition:transform .8s
+}
+.card.flip{transform:rotateY(180deg)}
+
+.side{
+  position:absolute;inset:0;border-radius:22px;overflow:hidden;
+  backface-visibility:hidden
+}
+.front,.back{
+  background:linear-gradient(160deg,rgba(255,255,255,.25),rgba(255,255,255,.05));
+  border:2px solid rgba(255,255,255,.35);backdrop-filter:blur(10px)
+}
+.back{
+  transform:rotateY(180deg);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:800;text-align:center;padding:30px
+}
+
+/* Frames */
+.card.neon::before,.card.gold::before,.card.dark::before{
+  content:"";position:absolute;inset:-4px;border-radius:26px;
+  filter:blur(14px);z-index:-1
+}
+.card.neon::before{background:linear-gradient(120deg,#ff00cc,#00ffff,#ffee00)}
+.card.gold::before{background:linear-gradient(120deg,#ffd700,#ffb700)}
+.card.dark::before{background:linear-gradient(120deg,#444,#111)}
+
+/* Holo */
+.holo{
+  position:absolute;inset:0;
+  background:linear-gradient(120deg,
+    hsla(var(--hue),100%,60%,.35),
+    hsla(calc(var(--hue)+120),100%,60%,.35),
+    hsla(calc(var(--hue)+240),100%,60%,.35)
+  );
+  mix-blend-mode:overlay;
+  animation:holo 6s linear infinite
+}
+@keyframes holo{to{filter:hue-rotate(360deg)}}
+
+.content{position:relative;z-index:3;padding:16px;height:100%;display:flex;flex-direction:column}
+.title{text-align:center;font-weight:800;font-size:20px}
+.subtitle{text-align:center;font-size:13px;opacity:.9}
+
+.image-box{
+  flex:1;margin:10px 0;border-radius:14px;overflow:hidden;
+  position:relative;background:rgba(0,0,0,.25)
+}
+.image-box img{width:100%;height:100%;object-fit:cover}
+.image-box::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(120deg,rgba(255,255,255,.25),transparent 45%);
+  mix-blend-mode:overlay
+}
+
+.stats{font-size:11px}
+.stat{margin:4px 0}
+.bar{height:6px;background:rgba(255,255,255,.2);border-radius:6px}
+.bar span{display:block;height:100%;background:linear-gradient(90deg,#ff00cc,#00ffff)}
+
+.rarity{position:absolute;top:12px;right:12px;font-size:11px}
+.edition{position:absolute;top:12px;left:12px;font-size:11px;opacity:.8}
+
+.sparkle{
+  position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;
+  animation:spark 4s linear infinite
+}
+@keyframes spark{
+  from{transform:translateY(120%) scale(0)}
+  to{transform:translateY(-20%) scale(1.2);opacity:0}
+}
+
+.hint{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  font-size:11px;opacity:.6;animation:hint 2s infinite
+}
+@keyframes hint{50%{opacity:1}}
+</style>
+</head>
+
+<body>
+
+<div class="ui">
+<label>Celebration</label><input id="titleInput" value="HAPPY BIRTHDAY">
+<label>Subtitle</label><input id="subInput" value="A Legendary Day!">
+<label>Back Message</label><textarea id="backInput">Sachin Cares About You! 💖</textarea>
+
+<label>Hue</label><input type="range" id="hue" min="0" max="360">
+<label>Frame</label>
+<select id="frame">
+<option value="neon">Neon</option>
+<option value="gold">Gold</option>
+<option value="dark">Dark</option>
+</select>
+
+<label>Edition</label><input id="editionInput" value="001 / 001">
+<label>Rarity</label>
+<select id="rarity">
+<option>COMMON</option><option>RARE</option>
+<option>EPIC</option><option>LEGENDARY</option>
+</select>
+
+<label>Beauty</label><input type="range" id="sBeauty" min="0" max="100" value="90">
+<label>Cuteness</label><input type="range" id="sCute" min="0" max="100" value="95">
+<label>Shy</label><input type="range" id="sShy" min="0" max="100" value="70">
+<label>Anger</label><input type="range" id="sAnger" min="0" max="100" value="20">
+<label>Dangerous</label><input type="range" id="sDanger" min="0" max="100" value="40">
+
+<label>Upload Image</label><input type="file" id="imgUpload" accept="image/*">
+<button id="saveCardBtn">Save & Generate Link</button>
+</div>
+
+<div class="scene">
+<div class="card neon" id="card">
+<div class="side front">
+<div class="holo"></div>
+<div class="rarity" id="rarityText">LEGENDARY</div>
+<div class="edition" id="edition">001 / 001</div>
+<div class="content">
+<div class="title" id="title">HAPPY BIRTHDAY</div>
+<div class="image-box"><img id="photo"></div>
+
+<div class="stats">
+<div class="stat">Beauty<div class="bar"><span id="bBeauty"></span></div></div>
+<div class="stat">Cuteness<div class="bar"><span id="bCute"></span></div></div>
+<div class="stat">Shy<div class="bar"><span id="bShy"></span></div></div>
+<div class="stat">Anger<div class="bar"><span id="bAnger"></span></div></div>
+<div class="stat">Dangerous<div class="bar"><span id="bDanger"></span></div></div>
+</div>
+
+<div class="subtitle" id="subtitle">A Legendary Day!</div>
+<div class="hint">↻ Tap to flip</div>
+</div>
+</div>
+
+<div class="side back" id="backText">Sachin Cares About You! 💖</div>
+</div>
+</div>
+
+<script>
+const API="https://snowy-darkness-5596.rkknitfabsachin.workers.dev";
+let imageBase64="",flipped=false;
+
+card.onclick=()=>{flipped=!flipped;card.classList.toggle("flip",flipped)};
+
+document.addEventListener("mousemove",e=>{
+ if(flipped||document.body.classList.contains("view"))return;
+ const x=(e.clientX/window.innerWidth-.5)*12;
+ const y=(e.clientY/window.innerHeight-.5)*-12;
+ card.style.transform=`rotateY(${x}deg) rotateX(${y}deg)`
+});
+
+imgUpload.onchange=e=>{
+ const f=e.target.files[0];if(!f)return;
+ const r=new FileReader();
+ r.onload=()=>{imageBase64=r.result;photo.src=imageBase64};
+ r.readAsDataURL(f);
+};
+
+titleInput.oninput=()=>title.textContent=titleInput.value.toUpperCase();
+subInput.oninput=()=>subtitle.textContent=subInput.value;
+backInput.oninput=()=>backText.textContent=backInput.value;
+hue.oninput=e=>document.documentElement.style.setProperty("--hue",e.target.value);
+frame.onchange=e=>card.className="card "+e.target.value;
+editionInput.oninput=()=>edition.textContent=editionInput.value;
+rarity.onchange=e=>rarityText.textContent=e.target.value;
+
+const bind=(s,b)=>s.oninput=e=>b.style.width=e.target.value+"%";
+bind(sBeauty,bBeauty);bind(sCute,bCute);bind(sShy,bShy);bind(sAnger,bAnger);bind(sDanger,bDanger);
+
+setInterval(()=>{
+ const s=document.createElement("div");
+ s.className="sparkle";s.style.left=Math.random()*100+"%";
+ s.style.animationDuration=3+Math.random()*3+"s";
+ card.appendChild(s);setTimeout(()=>s.remove(),6000)
+},400);
+
+saveCardBtn.onclick=async()=>{
+ if(!imageBase64)return alert("Upload image first");
+ const payload={
+ image:imageBase64,title:title.textContent,subtitle:subtitle.textContent,
+ backMessage:backText.textContent,
+ hue:getComputedStyle(document.documentElement).getPropertyValue("--hue"),
+ frame:card.classList.contains("gold")?"gold":card.classList.contains("dark")?"dark":"neon",
+ rarity:rarityText.textContent,edition:edition.textContent,
+ stats:{beauty:sBeauty.value,cuteness:sCute.value,shy:sShy.value,anger:sAnger.value,dangerous:sDanger.value}
+ };
+ const r=await fetch(API+"/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+ const d=await r.json();
+ if(!d.id)return alert("Save failed");
+ alert("Share link:\n"+location.origin+location.pathname+"?view=true&id="+d.id);
+};
+
+const p=new URLSearchParams(location.search);
+if(p.get("view")==="true"&&p.get("id")){
+ document.body.classList.add("view");
+ fetch(API+"/get?id="+p.get("id")).then(r=>r.json()).then(d=>{
+ photo.src=d.image;title.textContent=d.title;subtitle.textContent=d.subtitle;
+ backText.textContent=d.backMessage;edition.textContent=d.edition;
+ rarityText.textContent=d.rarity;card.className="card "+d.frame;
+ document.documentElement.style.setProperty("--hue",d.hue);
+ bBeauty.style.width=d.stats.beauty+"%";bCute.style.width=d.stats.cuteness+"%";
+ bShy.style.width=d.stats.shy+"%";bAnger.style.width=d.stats.anger+"%";
+ bDanger.style.width=d.stats.dangerous+"%";
+ setTimeout(()=>{card.classList.add("flip");setTimeout(()=>card.classList.remove("flip"),2200)},1200);
+ });
+}
+</script>
+
+</body>
+</html>
